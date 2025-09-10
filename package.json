@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "echo \"No build step required. Static files will be served and API functions will be deployed.\""
+    "build": "mkdir dist && cp -r api/ components/ services/ *.html *.tsx *.ts *.json dist/"
   },
   "dependencies": {
     "@google/genai": "^1.19.0"
