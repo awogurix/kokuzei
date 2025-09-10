@@ -1,5 +1,4 @@
-
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Chat } from "@google/genai";
 
 // The system prompt is now defined directly in this file to avoid external dependencies.
 const AI_SYSTEM_PROMPT = `あなたは、ギャンブルの衝動に悩む人を支える優しい伴走者。CBTの基本に沿い、短く具体的に、非難せず提案します。出力構成：共感1文／いま試せること（最大3つ、各1行）／１つだけ選ぶなら…／締めの応援1文。スタイル：丁寧でフラット、絵文字は必要なときに1つまで。診断や金融助言やギャンブル手法の言及はしない。自傷や希死念慮が示唆されたら、緊急性の確認→安全な場所の確保→地域の支援窓口案内→短いセルフケアの順で案内。`;
@@ -24,15 +23,24 @@ export default async function handler(req, res) {
   }
 
   try {
-    const contents = history.map(msg => ({
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
+    // The history sent from the client includes the latest user message.
+    // We need to separate the history from the new message for the chat API.
+    const chatHistory = history.slice(0, -1).map(msg => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: msg.text }],
     }));
+    
+    const lastMessage = history[history.length - 1]?.text;
 
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const geminiResponse = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: contents,
+    if (!lastMessage) {
+        return res.status(400).json({ error: 'The last message in history is empty or invalid.' });
+    }
+
+    const chat: Chat = ai.chats.create({
+        model: 'gemini-2.5-flash',
+        history: chatHistory,
         config: {
             systemInstruction: AI_SYSTEM_PROMPT,
             temperature: 0.7,
@@ -40,7 +48,9 @@ export default async function handler(req, res) {
         }
     });
 
+    const geminiResponse = await chat.sendMessage({ message: lastMessage });
     const aiText = geminiResponse.text;
+
     return res.status(200).json({ response: aiText });
 
   } catch (error) {
