@@ -1,22 +1,11 @@
 {
-  "name": "nami-navi:-your-wave-navigator",
+  "name": "nami-navi",
+  "version": "0.1.0",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "echo \"No build step required. Static files will be served and API functions will be deployed.\""
   },
   "dependencies": {
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "recharts": "^3.1.2",
-    "@google/genai": "^1.14.0"
-  },
-  "devDependencies": {
-    "@types/node": "^22.14.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0"
+    "@google/genai": "^1.19.0"
   }
 }
