@@ -291,7 +291,7 @@ const MoodLogPage: React.FC<{onSave: (log: Omit<MoodLog, 'id'>) => void;}> = ({o
             <h2 className="text-xl font-bold text-center">今の気持ちを記録</h2>
              <div className="bg-white p-4 rounded-xl shadow-md space-y-4">
                 <div>
-                    <label className="font-semibold block mb-2">気分アイコン</p>
+                    <label className="font-semibold block mb-2">気分アイコン</label>
                     <div className="flex flex-wrap gap-2">
                         {moods.map(m => <button key={m} onClick={() => setMoodIcon(m)} className={`text-3xl p-2 rounded-lg ${moodIcon === m ? 'bg-soft-blue' : ''}`}>{m}</button>)}
                     </div>
