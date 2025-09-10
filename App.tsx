@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { GoogleGenAI, Content } from '@google/genai';
 import { AppData, Trigger, UrgeEvent, MoodLog, AIChatMessage } from './types';
 import { ALL_TRIGGERS, COPING_STRATEGIES, AI_SYSTEM_PROMPT } from './constants';
 import { loadData, saveData } from './services/storageService';
+import { getAIResponse } from './services/aiService';
 import { HomeIcon, ChartIcon, HistoryIcon, ChatIcon, SettingsIcon, PlusIcon } from './components/icons';
 import UrgeStrengthChart from './components/charts/UrgeStrengthChart';
 import TriggerBarChart from './components/charts/TriggerBarChart';
@@ -221,48 +221,26 @@ const UrgeFlowPage: React.FC<{urge: Partial<UrgeEvent> | null; onComplete: (urge
 const AIChatPage: React.FC<{history: AIChatMessage[], onNewMessage: (message: Omit<AIChatMessage, 'id'>) => void;}> = ({history, onNewMessage}) => {
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const ai = useMemo(() => new GoogleGenAI({ apiKey: process.env.API_KEY! }), []);
 
     const handleSend = async () => {
         if (isLoading || !input.trim()) return;
         
         const userInput = input.trim();
-        onNewMessage({ role: 'user', text: userInput, timestamp: new Date().toISOString() });
+        const newUserMessage: Omit<AIChatMessage, 'id'> = { role: 'user', text: userInput, timestamp: new Date().toISOString() };
+        
+        onNewMessage(newUserMessage);
         setInput('');
         setIsLoading(true);
 
-        try {
-            // Create a temporary history for the API call to include the latest message.
-            const currentHistory = [...history, { role: 'user', text: userInput, id: '', timestamp: '' }];
+        const historyForApi: AIChatMessage[] = [
+            ...history,
+            { ...newUserMessage, id: 'temp-id' } // Add temporary id for type consistency
+        ];
 
-            const contents: Content[] = currentHistory.map(msg => ({
-                role: msg.role === 'assistant' ? 'model' : 'user',
-                parts: [{ text: msg.text }],
-            }));
-            
-            const geminiResponse = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
-                contents: contents,
-                config: {
-                    systemInstruction: AI_SYSTEM_PROMPT,
-                    temperature: 0.7,
-                    topP: 0.95,
-                }
-            });
+        const aiText = await getAIResponse(historyForApi);
 
-            const aiText = geminiResponse.text;
-            if (aiText) {
-                onNewMessage({ role: 'assistant', text: aiText, timestamp: new Date().toISOString() });
-            } else {
-                throw new Error("Received empty response from AI.");
-            }
-        } catch (e) {
-            console.error("Error calling Gemini API:", e);
-            const errorMessage = "申し訳ありません、エラーが発生しました。サーバーとの通信でエラーが発生しました。";
-            onNewMessage({ role: 'assistant', text: errorMessage, timestamp: new Date().toISOString() });
-        } finally {
-            setIsLoading(false);
-        }
+        onNewMessage({ role: 'assistant', text: aiText, timestamp: new Date().toISOString() });
+        setIsLoading(false);
     };
 
     return (

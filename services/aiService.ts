@@ -1,12 +1,14 @@
 
-export const getAIResponse = async (userInput: string): Promise<string> => {
+import { AIChatMessage } from '../types';
+
+export const getAIResponse = async (history: AIChatMessage[]): Promise<string> => {
   try {
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ userInput }),
+      body: JSON.stringify({ history }),
     });
 
     if (!response.ok) {

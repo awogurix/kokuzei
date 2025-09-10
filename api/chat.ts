@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 
 // The system prompt is now defined directly in this file to avoid external dependencies.
@@ -10,10 +11,10 @@ export default async function handler(req, res) {
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  const { userInput } = req.body;
+  const { history } = req.body;
 
-  if (!userInput) {
-    return res.status(400).json({ error: 'userInput is required' });
+  if (!history || !Array.isArray(history) || history.length === 0) {
+    return res.status(400).json({ error: 'history is required and must be a non-empty array' });
   }
 
   // The API key is read from server-side environment variables on Vercel
@@ -23,13 +24,15 @@ export default async function handler(req, res) {
   }
 
   try {
+    const contents = history.map(msg => ({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.text }],
+    }));
+
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const geminiResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: [{
-            role: 'user',
-            parts: [{ text: userInput }],
-        }],
+        contents: contents,
         config: {
             systemInstruction: AI_SYSTEM_PROMPT,
             temperature: 0.7,
