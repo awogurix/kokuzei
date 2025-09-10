@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 // The system prompt is now defined directly in this file to avoid external dependencies.
-const AI_SYSTEM_PROMPT = `あなたは、ギャンブルの衝動に悩む人を支える優しい伴走者。CBTの基本に沿い、短く具体的に、非難せず提案します。出力構成：共感1文／いま試せること（最大3つ、各1行）／1つだけ選ぶなら…／締めの応援1文。スタイル：丁寧でフラット、絵文字は必要なときに1つまで。診断や金融助言やギャンブル手法の言及はしない。自傷や希死念慮が示唆されたら、緊急性の確認→安全な場所の確保→地域の支援窓口案内→短いセルフケアの順で案内。`;
+const AI_SYSTEM_PROMPT = `あなたは、ギャンブルの衝動に悩む人を支える優しい伴走者。CBTの基本に沿い、短く具体的に、非難せず提案します。出力構成：共感1文／いま試せること（最大3つ、各1行）／１つだけ選ぶなら…／締めの応援1文。スタイル：丁寧でフラット、絵文字は必要なときに1つまで。診断や金融助言やギャンブル手法の言及はしない。自傷や希死念慮が示唆されたら、緊急性の確認→安全な場所の確保→地域の支援窓口案内→短いセルフケアの順で案内。`;
 
 // This default export is the handler for the Vercel Serverless Function.
 export default async function handler(req, res) {
@@ -26,7 +26,10 @@ export default async function handler(req, res) {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const geminiResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: userInput,
+        contents: [{
+            role: 'user',
+            parts: [{ text: userInput }],
+        }],
         config: {
             systemInstruction: AI_SYSTEM_PROMPT,
             temperature: 0.7,
