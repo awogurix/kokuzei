@@ -1,11 +1,15 @@
+
 {
   "name": "nami-navi",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "mkdir dist && cp -r api/ components/ services/ *.html *.tsx *.ts *.json dist/"
+    "build": "mkdir -p dist && esbuild index.tsx --bundle --outfile=dist/index.js --format=esm --jsx=automatic --external:react --external:react-dom --external:recharts && cp index.html dist/"
   },
   "dependencies": {
     "@google/genai": "^1.19.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.23.0"
   }
 }
