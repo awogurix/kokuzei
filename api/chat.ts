@@ -25,15 +25,18 @@ export default async function handler(req, res) {
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
-    // Map the client's history format to the format required by the Gemini API.
-    const contents = history.map(msg => ({
+    // The last message is the new one from the user
+    const latestMessage = history[history.length - 1];
+
+    // The rest of the history is the past conversation, with roles mapped correctly
+    const chatHistory = history.slice(0, -1).map(msg => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: msg.text }],
     }));
 
-    const response = await ai.models.generateContent({
+    const chat = ai.chats.create({
         model: 'gemini-2.5-flash',
-        contents: contents, // Pass the entire conversation history
+        history: chatHistory,
         config: {
             systemInstruction: AI_SYSTEM_PROMPT,
             temperature: 0.7,
@@ -41,6 +44,7 @@ export default async function handler(req, res) {
         },
     });
 
+    const response = await chat.sendMessage({ message: latestMessage.text });
     const aiText = response.text;
 
     return res.status(200).json({ response: aiText });
